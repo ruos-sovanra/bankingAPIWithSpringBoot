@@ -1,5 +1,7 @@
 package com.example.banking.features.file;
 
+import com.example.banking.features.file.dto.FileResponse;
+import com.example.banking.utility.BaseResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,33 +16,22 @@ import java.util.HashMap;
 @RequiredArgsConstructor
 public class FileRestController {
     private final FileService fileService;
-    @PostMapping()
-
-    private String generateImageUrl(String fileName, HttpServletRequest request){
-        return String.format("%s://%s:%d/images/%s",request.getScheme(), request.getServerName(), request.getServerPort(), fileName);
-    }
-
-    public HashMap<String, Object> responseMessage(Object data, String message, int status){
-        HashMap<String, Object> response = new HashMap<>();
-        response.put("payload", data);
-        response.put("message", message);
-        response.put("status",status);
-        return response;
-    }
 
     @PostMapping(value = "",consumes = "multipart/form-data")
-    public HashMap<String, Object> uploadFile(@RequestBody MultipartFile file , HttpServletRequest request) throws IOException {
-        generateImageUrl("fileName",request);
-        return responseMessage(generateImageUrl(fileService.uploadSingleFile(file),request), "File Uploaded Successfully", HttpStatus.CREATED.value());
+    public BaseResponse<FileResponse> uploadFile(@RequestBody MultipartFile file) throws IOException {
+        return BaseResponse.<FileResponse>createSuccess()
+                .setPayload(new FileResponse(fileService.uploadSingleFile(file),"" ));
     }
     @PostMapping(value = "/multiple",consumes = "multipart/form-data")
-    public HashMap<String, Object> uploadMultipleFiles(@RequestBody MultipartFile[] files) {
+    public BaseResponse<FileResponse> uploadMultipleFiles(@RequestBody MultipartFile[] files) {
 
-        return responseMessage(fileService.uploadMultipleFile(files), "Files Uploaded Successfully", HttpStatus.CREATED.value());
+        return BaseResponse.<FileResponse>createSuccess()
+                .setPayload(new FileResponse( fileService.uploadMultipleFile(files).toString(),null ));
     }
     @DeleteMapping("/{fileName}")
-    public HashMap<String, Object> deleteFile(@PathVariable String fileName){
+    public BaseResponse<FileResponse> deleteFile(@PathVariable String fileName){
         fileService.deleteFile(fileName);
-        return responseMessage(null, "File Deleted Successfully", HttpStatus.OK.value());
+        return BaseResponse.<FileResponse>createSuccess()
+                .setPayload(new FileResponse(null,"" ));
     }
 }
